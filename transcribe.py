@@ -84,7 +84,11 @@ def transcribe_audio(hrl_link):
     transcript_data = json.load(transcript_file)
     transcript_file.close()
 
+    summary_file = open('hls/hlsnew/summary.json', 'w')
+    summary = json.load(file)
+    summary_file.close()
+
     print("Final response:")
     print(transcript_data)
 
-    return transcript_data
+    return summary

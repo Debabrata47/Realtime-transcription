@@ -1,0 +1,6 @@
+fastapi
+whisper
+transformers
+librosa
+uvicorn
+gunicorn
