@@ -1,5 +1,5 @@
 fastapi
-whisper
+openai-whisper
 transformers
 librosa
 uvicorn
