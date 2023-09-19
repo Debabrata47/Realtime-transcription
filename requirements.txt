@@ -4,3 +4,9 @@ transformers
 librosa
 uvicorn
 gunicorn
+langchain
+openai
+tiktoken
+huggingface_hub
+openai
+firebase-admin
