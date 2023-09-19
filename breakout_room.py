@@ -50,11 +50,11 @@ def evaluate_discussion(link: str, meeting_id: str, title: str):
     if not os.path.exists(f'meetings/{meeting_id}/{title}'):
         os.makedirs(f'meetings/{meeting_id}/{title}')
 
-    AUDIO_FILENAME = f'meetings/{meeting_id}/{title}/zoom_audio_16000.wav'
+    AUDIO_FILENAME = f'meetings/{meeting_id}/{title}/zoom_audio.wav'
     os.makedirs(f'meetings/{meeting_id}/{title}/nemo')
     data_dir = f'meetings/{meeting_id}/{title}/nemo/'
 
-    urllib.request.urlretrieve(link, f'meetings/{meeting_id}/{title}/zoom_meeting_16000.mp4')
+    urllib.request.urlretrieve(link, f'meetings/{meeting_id}/{title}/zoom_meeting.mp4')
 
     audioclip = AudioFileClip(f'meetings/{meeting_id}/{title}/zoom_meeting.mp4')
     audioclip.write_audiofile(f'meetings/{meeting_id}/{title}/zoom_audio.wav')
