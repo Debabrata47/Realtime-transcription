@@ -1,4 +1,6 @@
-torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu118
+torch
+torchvision
+torchaudio
 fastapi
 openai-whisper
 transformers
@@ -16,9 +18,9 @@ openai
 firebase-admin
 python-dotenv
 moviepy
-urllib
+urllib3
 omegaconf
-shutil
+shutils
 scipy
 numpy
 pandas
