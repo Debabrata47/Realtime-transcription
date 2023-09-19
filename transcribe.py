@@ -5,7 +5,7 @@ import time
 import librosa
 import spacy
 from transformers import pipeline
-from Classroom_Summary.firebase_db import rtdb
+from firebase_db import rtdb
 import os
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.decomposition import LatentDirichletAllocation

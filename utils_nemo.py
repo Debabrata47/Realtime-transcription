@@ -69,7 +69,7 @@ class AlignedTranscriptionResult(TypedDict):
     word_segments: List[SingleWordSegment]
 
 
-def load_audio(file: str, sr: int = SAMPLE_RATE):
+def load_audio(file: str, sr: int = 16000):
     """
     Open an audio file and read as mono waveform, resampling as necessary
 

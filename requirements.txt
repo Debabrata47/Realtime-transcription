@@ -23,4 +23,7 @@ omegaconf
 shutils
 scipy
 numpy
+ffmpeg-python
 pandas
+Cython
+nemo_toolkit['all']

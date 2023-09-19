@@ -1,8 +1,8 @@
 import os
 import json
-from firebase_db import rtdb
-from dotenv import load_dotenv
 from utils import structure_summary
+from dotenv import load_dotenv
+from firebase_db import rtdb
 from langchain.chat_models import ChatOpenAI
 from langchain.chains import LLMChain
 from langchain.schema import Document
@@ -19,13 +19,16 @@ import urllib
 import librosa
 import nemo.collections.asr as nemo_asr
 import numpy as np
-from utils_nemo import *
 import librosa
 
+from omegaconf import OmegaConf
+from utils_nemo import *
+import shutil
 from scipy.io import wavfile
-from utils_nemo import load_align_model,align
+from utils_nemo import load_align_model, align
 from nemo.collections.asr.parts.utils.decoder_timestamps_utils import ASRDecoderTimeStamps
 from nemo.collections.asr.parts.utils.speaker_utils import rttm_to_labels
+from nemo.collections.asr.parts.utils.diarization_utils import OfflineDiarWithASR
 import ffmpeg
 
 import whisper
@@ -34,17 +37,12 @@ import torch
 import torchaudio
 import nemo
 import glob
-import wget
 
 # Loads environment
 load_dotenv()
 
-llm = ChatOpenAI(temperature=0, model='gpt-3.5-turbo-16k')
-
 
 def evaluate_discussion(link: str, meeting_id: str, title: str):
-
-
     if not os.path.exists(f'meetings/{meeting_id}'):
         os.makedirs(f'meetings/{meeting_id}')
 
@@ -55,17 +53,18 @@ def evaluate_discussion(link: str, meeting_id: str, title: str):
     os.makedirs(f'meetings/{meeting_id}/{title}/nemo')
     data_dir = f'meetings/{meeting_id}/{title}/nemo/'
 
+    urllib.request.urlretrieve(link, f'meetings/{meeting_id}/{title}/zoom_meeting.mp4')
+
     audioclip = AudioFileClip(f'meetings/{meeting_id}/{title}/zoom_meeting.mp4')
     audioclip.write_audiofile(f'meetings/{meeting_id}/{title}/zoom_audio.wav')
 
     signal, sample_rate = librosa.load(f'meetings/{meeting_id}/{title}/zoom_audio.wav', sr=16000)
-    wavfile.write(AUDIO_FILENAME,sample_rate,signal)
+    wavfile.write(AUDIO_FILENAME, sample_rate, signal)
 
     DOMAIN_TYPE = "meeting"  # Can be meeting or telephonic based on domain type of the audio file
     CONFIG_FILE_NAME = f"diar_infer_{DOMAIN_TYPE}.yaml"
 
     CONFIG_URL = f"https://raw.githubusercontent.com/NVIDIA/NeMo/main/examples/speaker_tasks/diarization/conf/inference/{CONFIG_FILE_NAME}"
-
 
     if not os.path.exists(os.path.join(data_dir, CONFIG_FILE_NAME)):
         CONFIG = wget.download(CONFIG_URL, data_dir)
@@ -76,6 +75,8 @@ def evaluate_discussion(link: str, meeting_id: str, title: str):
     print(OmegaConf.to_yaml(cfg))
 
     meta = {
+        'audio_filepath': AUDIO_FILENAME,
+        'offset': 0,
         'duration': None,
         'label': 'infer',
         'text': '-',
@@ -89,7 +90,6 @@ def evaluate_discussion(link: str, meeting_id: str, title: str):
 
     cfg.diarizer.manifest_filepath = os.path.join(data_dir, 'input_manifest.json')
     os.system(f'cat {cfg.diarizer.manifest_filepath}')
-
 
     pretrained_speaker_model = 'titanet_large'
     cfg.diarizer.manifest_filepath = cfg.diarizer.manifest_filepath
@@ -105,11 +105,10 @@ def evaluate_discussion(link: str, meeting_id: str, title: str):
 
     asr_decoder_ts = ASRDecoderTimeStamps(cfg.diarizer)
 
-    from nemo.collections.asr.parts.utils.diarization_utils import OfflineDiarWithASR
     asr_diar_offline = OfflineDiarWithASR(cfg.diarizer)
 
     model = whisper.load_model('medium.en')
-    out = model.transcribe(f'meetings/{meeting_id}/{title}/zoom_audio_16000.wav')
+    out = model.transcribe('zoom_audio_16000.wav')
 
     device = 'cuda'
     SAMPLE_RATE = 16000
@@ -152,29 +151,22 @@ def evaluate_discussion(link: str, meeting_id: str, title: str):
     {docs} 
     Based on the list of docs, please identify the main themes for each speaker. 
     Helpful Answer:"""
-
     map_prompt = PromptTemplate.from_template(map_template)
     map_chain = LLMChain(llm=llm, prompt=map_prompt)
-
     reduce_template = """The following is set of summaries 
     {doc_summaries} 
     Generate a summary that analyses each speaker on the basis of how strong point he made. Did everyone agree. How much he spoke. Quality of views the speaker put forward. Did the speaker change his viewpoint on the basis of other speaker. Did he agree to other fair points.
     Along with a overall key takeways summary separately. Along with that generate another summary that describes the quality of the discussion. Another to suggest what improvements could be made. 
     Helpful Answer:"""
     reduce_prompt = PromptTemplate.from_template(reduce_template)
-
     reduce_chain = LLMChain(llm=llm, prompt=reduce_prompt)
-
     combine_documents_chain = StuffDocumentsChain(llm_chain=reduce_chain, document_variable_name="doc_summaries")
-
     # Combines and iteratively reduces the mapped documents
-
     reduce_documents_chain = ReduceDocumentsChain(
         combine_documents_chain=combine_documents_chain,
         collapse_documents_chain=combine_documents_chain,
         token_max=4000
     )
-
     # Combining documents by mapping a chain over them, then combining results
     map_reduce_chain = MapReduceDocumentsChain(
         llm_chain=map_chain,
@@ -182,15 +174,11 @@ def evaluate_discussion(link: str, meeting_id: str, title: str):
         document_variable_name="docs",
         return_intermediate_steps=False
     )
-
     # Receive the discussion after the diarization
     docs = Document(page_content=discussion)
     text_splitter = RecursiveCharacterTextSplitter(chunk_size=1000, chunk_overlap=100)
     all_splits = text_splitter.split_documents([docs])
-
     output = map_reduce_chain.run(all_splits)
     json_summaries = structure_summary(output)
-
     rtdb.child(meeting_id).child('breakout_room').child(title).child('summary').set(json_summaries)
-
     return json_summaries
