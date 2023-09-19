@@ -1,0 +1,11 @@
+fastapi
+openai-whisper
+transformers
+scikit-learn
+spacy
+nltk
+librosa
+uvicorn
+gunicorn
+langchain openai
+firebase-admin

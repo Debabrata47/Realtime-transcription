@@ -71,11 +71,7 @@ def transcribe_audio(hrl_link, meeting_id):
     time.sleep(40)
     while True:
         start = time.time()
-<<<<<<< HEAD
-        cmd = f'ffmpeg -y -i meetings/{meeting_id}/audiotst.wav -ss {count} -t 60 -vn -c:a copy meetings/{meeting_id}/audioclip.wav'
-=======
         cmd = f'ffmpeg -y -i meetings/{meeting_id}/audiomain.wav -ss {count} -t 60 -vn -c:a copy meetings/{meeting_id}/audioclip.wav'
->>>>>>> 8f38e78ad1f9af6ece172d5fcd4a03889f95f4c3
         os.system(cmd)
 
         d, sr = librosa.load(f'meetings/{meeting_id}/audioclip.wav', sr=None)
