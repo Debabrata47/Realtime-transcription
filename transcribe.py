@@ -9,6 +9,7 @@ from transformers import pipeline
 import json
 import os
 from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.decomposition import LatentDirichletAllocation
 import nltk
 import numpy as np
 from dotenv import load_dotenv
@@ -169,6 +170,10 @@ def transcribe_audio(hrl_link, meeting_id):
 
     nltk.download('stopwords')
     stop = nltk.corpus.stopwords.words('english')
+
+    lda_model = LatentDirichletAllocation(n_components=n_topics,
+                                          learning_method='online', random_state=42, max_iter=1)
+    lda_top = lda_model.fit_transform(vect_text)
 
     vect = TfidfVectorizer(stop_words=stop, max_features=1000)
     vect_text = vect.fit_transform(textpp)
