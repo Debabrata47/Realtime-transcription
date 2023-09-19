@@ -42,7 +42,7 @@ class video(Thread):
 
 
 def transcribe_audio(hrl_link, meeting_id):
-    t1 = video(link=hrl_link)
+    t1 = video(link=hrl_link, meeting_id=meeting_id)
     t1.start()
     while True:
         if 'audiotst.wav' in os.listdir(f'meetings/{meeting_id}'):
