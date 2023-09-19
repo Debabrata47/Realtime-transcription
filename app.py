@@ -1,14 +1,15 @@
 from fastapi import FastAPI
 from transcribe import transcribe_audio
-from fastapi.responses import JSONResponse
-
 
 app = FastAPI()
 
 
 @app.get("/get_summary")
-def summarize(link: str):
-    json_response = transcribe_audio(link)
-
-    # return JSONResponse(content=json_response, media_type='application/json')
+def summarize(link: str, meeting_id: str):
+    json_response = transcribe_audio(link, meeting_id)
     return json_response
+
+
+@app.post("/classroom_summary")
+def summary(link: str, meeting_id: str):
+    json_response = transcribe_audio(link, meeting_id)

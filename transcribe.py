@@ -1,4 +1,6 @@
 import whisper
+import firebase_admin
+from firebase_admin import credentials, db
 from threading import *
 import os
 import time
@@ -9,6 +11,22 @@ from transformers import pipeline
 MODEL = whisper.load_model('small.en')
 SUMMARIZER = pipeline('summarization', model='facebook/bart-large-cnn')
 
+firebaseConfig = {
+    'apiKey': "AIzaSyCGmeVM6OPnRbVGaW6O7DVqafArIGEm5Ys",
+    'authDomain': "silwalk-inc.firebaseapp.com",
+    'projectId': "silwalk-inc",
+    'databaseURL': "https://silwalk-inc-default-rtdb.firebaseio.com",
+    'storageBucket': "silwalk-inc.appspot.com",
+    'messagingSenderId': "665210785578",
+    'serviceAccount': "ServiceKey.json",
+    'appId': "1:665210785578:web:6279247f0704ec73be5853",
+    'measurementId': "G-EW5W77X7X7"
+}
+
+cred = credentials.Certificate("ServiceKey.json")
+firebase_admin.initialize_app(cred, firebaseConfig)
+
+rtdb = db.reference()
 
 class video(Thread):
     def __init__(self, link):
@@ -22,7 +40,7 @@ class video(Thread):
         os.system(cmd)
 
 
-def transcribe_audio(hrl_link):
+def transcribe_audio(hrl_link, meeting_id):
     t1 = video(link=hrl_link)
     t1.start()
     while True:
@@ -31,7 +49,7 @@ def transcribe_audio(hrl_link):
     count = 0
     trans = {}
     summary = {}
-    time.sleep(20)
+    time.sleep(40)
     while True:
         start = time.time()
         cmd = f'ffmpeg -y -i hls/hlsnew/audiotst.wav -ss {count} -t 60 -vn -c:a copy hls/hlsnew/audioclip.wav'
@@ -51,8 +69,11 @@ def transcribe_audio(hrl_link):
         json.dump(trans, file, ensure_ascii=False)
         file.close()
 
+        rtdb.child(meeting_id).child('transcription').set(trans)
+
         if ind % 3 == 0:
             t3m = ''
+
             file = open('hls/hlsnew/transcript1.json', 'r')
             nas = json.load(file)
             file.close()
@@ -67,7 +88,8 @@ def transcribe_audio(hrl_link):
             file = open('hls/hlsnew/summary.json', 'w')
             json.dump(summary, file, ensure_ascii=False)
             file.close()
-            break
+
+        rtdb.child(meeting_id).child('summary').set(summary)
 
         count += 60
 
@@ -75,20 +97,6 @@ def transcribe_audio(hrl_link):
         t = end - start
         print(cmd, t)
 
-        if t < 60:
+        if t > 0:
             time.sleep(60 - t)
-        else:
-            time.sleep(t % 60)
 
-    transcript_file = open('hls/hlsnew/transcript1.json', 'r')
-    transcript_data = json.load(transcript_file)
-    transcript_file.close()
-
-    summary_file = open('hls/hlsnew/summary.json', 'w')
-    summary = json.load(file)
-    summary_file.close()
-
-    print("Final response:")
-    print(transcript_data)
-
-    return summary
