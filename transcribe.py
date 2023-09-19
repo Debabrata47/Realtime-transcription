@@ -45,7 +45,7 @@ def transcribe_audio(hrl_link, meeting_id):
     t1 = video(link=hrl_link, meeting_id=meeting_id)
     t1.start()
     while True:
-        if 'audiotst.wav' in os.listdir(f'meetings/{meeting_id}'):
+        if 'audiomain.wav' in os.listdir(f'meetings/{meeting_id}'):
             break
     count = 0
     trans = {}
@@ -66,12 +66,10 @@ def transcribe_audio(hrl_link, meeting_id):
         ind = (count // 60) + 1
         trans[ind] = out
 
-
         rtdb.child(meeting_id).child('transcription').set(trans)
 
         if ind % 3 == 0:
             t3m = ''
-
 
             for i in range(ind - 2, ind + 1):
                 t3m += (trans[str(i)] + ' ')
@@ -79,7 +77,6 @@ def transcribe_audio(hrl_link, meeting_id):
             s3m = SUMMARIZER(t3m, max_length=130, min_length=30, do_sample=False)[0]['summary_text']
 
             summary[ind // 3] = s3m
-
 
         rtdb.child(meeting_id).child('summary').set(summary)
 
