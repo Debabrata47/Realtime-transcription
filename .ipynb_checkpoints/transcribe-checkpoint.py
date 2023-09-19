@@ -25,7 +25,7 @@ from langchain.schema import AIMessage, HumanMessage, SystemMessage
 from langchain.callbacks import get_openai_callback
 from langchain.output_parsers import StructuredOutputParser, ResponseSchema
 
-os.environ['OPENAI_API_KEY'] = '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'
+os.environ['OPENAI_API_KEY'] = ''
 model = whisper.load_model('small.en')
 SUMMARIZER = pipeline('summarization', model='facebook/bart-large-cnn')
 
