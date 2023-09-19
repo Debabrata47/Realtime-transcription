@@ -15,6 +15,7 @@ os.system('apt-get install sox libsndfile1 ffmpeg')
 os.system(f'python -m pip install git+https://github.com/NVIDIA/NeMo.git@${BRANCH}')
 
 from moviepy.editor import *
+import wget
 import urllib
 import librosa
 import nemo.collections.asr as nemo_asr
