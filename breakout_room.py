@@ -50,7 +50,7 @@ def evaluate_discussion(link: str, meeting_id: str, title: str):
     if not os.path.exists(f'meetings/{meeting_id}/{title}'):
         os.makedirs(f'meetings/{meeting_id}/{title}')
 
-    AUDIO_FILENAME = f'meetings/{meeting_id}/{title}/zoom_audio.wav'
+    AUDIO_FILENAME = f'meetings/{meeting_id}/{title}/zoom_audio_16000.wav'
     os.makedirs(f'meetings/{meeting_id}/{title}/nemo')
     data_dir = f'meetings/{meeting_id}/{title}/nemo/'
 
@@ -109,7 +109,7 @@ def evaluate_discussion(link: str, meeting_id: str, title: str):
     asr_diar_offline = OfflineDiarWithASR(cfg.diarizer)
 
     model = whisper.load_model('medium.en')
-    out = model.transcribe('zoom_audio_16000.wav')
+    out = model.transcribe(f'meetings/{meeting_id}/{title}/zoom_audio_16000.wav')
 
     device = 'cuda'
     SAMPLE_RATE = 16000
