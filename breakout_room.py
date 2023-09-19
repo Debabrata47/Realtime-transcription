@@ -54,7 +54,7 @@ def evaluate_discussion(link: str, meeting_id: str, title: str):
     os.makedirs(f'meetings/{meeting_id}/{title}/nemo')
     data_dir = f'meetings/{meeting_id}/{title}/nemo/'
 
-    urllib.request.urlretrieve(link, f'meetings/{meeting_id}/{title}/zoom_meeting.mp4')
+    urllib.request.urlretrieve(link, f'meetings/{meeting_id}/{title}/zoom_meeting_16000.mp4')
 
     audioclip = AudioFileClip(f'meetings/{meeting_id}/{title}/zoom_meeting.mp4')
     audioclip.write_audiofile(f'meetings/{meeting_id}/{title}/zoom_audio.wav')
