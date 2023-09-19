@@ -11,6 +11,7 @@ import os
 from sklearn.feature_extraction.text import TfidfVectorizer
 import nltk
 import numpy as np
+from dotenv import load_dotenv
 from langchain.chat_models import ChatOpenAI
 from langchain.prompts.chat import (
     ChatPromptTemplate,
@@ -19,7 +20,9 @@ from langchain.prompts.chat import (
     HumanMessagePromptTemplate,
 )
 
-os.environ['OPENAI_API_KEY'] = ''
+# Loads openai environment
+load_dotenv()
+
 model = whisper.load_model('small.en')
 SUMMARIZER = pipeline('summarization', model='facebook/bart-large-cnn')
 

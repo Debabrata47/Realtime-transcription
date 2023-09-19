@@ -13,3 +13,4 @@ tiktoken
 huggingface_hub
 openai
 firebase-admin
+python-dotenv

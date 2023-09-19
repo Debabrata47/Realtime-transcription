@@ -1,5 +1,8 @@
 import os
 import json
+import firebase_admin
+from firebase_admin import credentials, db
+from dotenv import load_dotenv
 from utils import structure_summary
 from langchain.chat_models import ChatOpenAI
 from langchain.chains import LLMChain
@@ -8,14 +11,31 @@ from langchain.prompts import PromptTemplate
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 from langchain.chains import ReduceDocumentsChain, MapReduceDocumentsChain, StuffDocumentsChain
 
-
-
+# Loads environment
+load_dotenv()
 
 llm = ChatOpenAI(temperature=0, mdoel='gpt-3.5-turbo-16k')
 
 
-def evaluate_discussion(link: str, meeting_id: str, title: str):
+firebaseConfig = {
+    'apiKey': "AIzaSyCGmeVM6OPnRbVGaW6O7DVqafArIGEm5Ys",
+    'authDomain': "silwalk-inc.firebaseapp.com",
+    'projectId': "silwalk-inc",
+    'databaseURL': "https://silwalk-inc-default-rtdb.firebaseio.com",
+    'storageBucket': "silwalk-inc.appspot.com",
+    'messagingSenderId': "665210785578",
+    'serviceAccount': "ServiceKey.json",
+    'appId': "1:665210785578:web:6279247f0704ec73be5853",
+    'measurementId': "G-EW5W77X7X7"
+}
 
+cred = credentials.Certificate("ServiceKey.json")
+firebase_admin.initialize_app(cred, firebaseConfig)
+
+rtdb = db.reference()
+
+
+def evaluate_discussion(link: str, meeting_id: str, title: str):
     # Write a function to extract the diarization for the discussion.
 
     map_template = """
@@ -60,8 +80,8 @@ def evaluate_discussion(link: str, meeting_id: str, title: str):
     all_splits = text_splitter.split_documents([docs])
 
     output = map_reduce_chain.run(all_splits)
-    json_response = structure_summary(output)
+    json_summaries = structure_summary(output)
 
-    return json_response
+    rtdb.child(meeting_id).child('breakout_room').child(title).child('summary').set(json_summaries)
 
-
+    return json_summaries
