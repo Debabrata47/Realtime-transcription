@@ -2,17 +2,15 @@ import whisper
 import firebase_admin
 from firebase_admin import credentials, db
 from threading import *
-import os
 import time
 import librosa
-import json
 import spacy
 from transformers import pipeline
 import json
 import os
 from sklearn.feature_extraction.text import TfidfVectorizer
 import nltk
-from langchain.llms import OpenAI
+import numpy as np
 from langchain.chat_models import ChatOpenAI
 from langchain.prompts.chat import (
     ChatPromptTemplate,
@@ -20,10 +18,6 @@ from langchain.prompts.chat import (
     AIMessagePromptTemplate,
     HumanMessagePromptTemplate,
 )
-from langchain.schema import AIMessage, HumanMessage, SystemMessage
-
-from langchain.callbacks import get_openai_callback
-from langchain.output_parsers import StructuredOutputParser, ResponseSchema
 
 os.environ['OPENAI_API_KEY'] = ''
 model = whisper.load_model('small.en')
@@ -71,11 +65,7 @@ def transcribe_audio(hrl_link, meeting_id):
     time.sleep(40)
     while True:
         start = time.time()
-<<<<<<< HEAD
-        cmd = f'ffmpeg -y -i meetings/{meeting_id}/audiotst.wav -ss {count} -t 60 -vn -c:a copy meetings/{meeting_id}/audioclip.wav'
-=======
         cmd = f'ffmpeg -y -i meetings/{meeting_id}/audiomain.wav -ss {count} -t 60 -vn -c:a copy meetings/{meeting_id}/audioclip.wav'
->>>>>>> 8f38e78ad1f9af6ece172d5fcd4a03889f95f4c3
         os.system(cmd)
 
         d, sr = librosa.load(f'meetings/{meeting_id}/audioclip.wav', sr=None)
@@ -127,32 +117,32 @@ def transcribe_audio(hrl_link, meeting_id):
 
     segment = transcript['segments']
     transcript = transcript['text']
-    
+
     seg = []
 
     count = 1
     for i in segment:
-        if i['end'] > count*600:
+        if i['end'] > count * 600:
             count += 1
         if len(seg) < count:
-            a = { 'trans':'',
-            'start':-1,
-            'end' : -1
-                     }
+            a = {'trans': '',
+                 'start': -1,
+                 'end': -1
+                 }
             seg.append(a)
-        seg[count-1]['trans'] += i['text']
-        if seg[count-1]['start'] == -1:
-            seg[count-1]['start'] = i['start']
-        seg[count-1]['end'] = i['end']
+        seg[count - 1]['trans'] += i['text']
+        if seg[count - 1]['start'] == -1:
+            seg[count - 1]['start'] = i['start']
+        seg[count - 1]['end'] = i['end']
 
     text = [i['trans'] for i in seg]
-    
+
     os.system('python -m spacy download en_core_web_sm')
-    
+
     nlp = spacy.load("en_core_web_sm")
 
-    s=set()
-    s.update(['okay','right','know','like','thank','you'])
+    s = set()
+    s.update(['okay', 'right', 'know', 'like', 'thank', 'you'])
 
     textpp = []
     for i in text:
@@ -177,40 +167,40 @@ def transcribe_audio(hrl_link, meeting_id):
     nltk.download('stopwords')
     stop = nltk.corpus.stopwords.words('english')
 
-    vect =TfidfVectorizer(stop_words=stop,max_features=1000)
-    vect_text=vect.fit_transform(textpp)
+    vect = TfidfVectorizer(stop_words=stop, max_features=1000)
+    vect_text = vect.fit_transform(textpp)
 
     rep_lda = [[] for i in range(lda_model.components_.shape[0])]
     vocab = vect.get_feature_names_out()
     for i, comp in enumerate(lda_model.components_):
-         vocab_comp = zip(vocab, comp)
-         sorted_words = sorted(vocab_comp, key= lambda x:x[1], reverse=True)[:10]
-         print("Topic "+str(i)+": ")
-         for t in sorted_words:
-              rep_lda[i].append(t[0])
+        vocab_comp = zip(vocab, comp)
+        sorted_words = sorted(vocab_comp, key=lambda x: x[1], reverse=True)[:10]
+        print("Topic " + str(i) + ": ")
+        for t in sorted_words:
+            rep_lda[i].append(t[0])
 
     top = []
     for i in rep_lda:
         output = chat(
-          chat_prompt.format_prompt(
-              topic=i
-          ).to_messages()
-          )
+            chat_prompt.format_prompt(
+                topic=i
+            ).to_messages()
+        )
         out = output.content
         if out[0] == '"':
             out = out[1:-1]
         top.append(out)
 
     d_lda = {}
-    for i,mat in enumerate(lda_top):
+    for i, mat in enumerate(lda_top):
         ind = np.argmax(mat)
         tp = top[ind]
         if tp not in d_lda:
             d_lda[tp] = {
-                          'trans' : seg[i]['trans'],
-                          'start' : seg[i]['start'],
-                          'end' : seg[i]['end'],
-                          'score' : mat[ind]
+                'trans': seg[i]['trans'],
+                'start': seg[i]['start'],
+                'end': seg[i]['end'],
+                'score': mat[ind]
             }
         else:
             if d_lda[tp]['score'] < mat[ind]:
@@ -219,4 +209,4 @@ def transcribe_audio(hrl_link, meeting_id):
                 d_lda[tp]['end'] = seg[i]['end']
                 d_lda[tp]['start'] = seg[i]['start']
 
-    rtdb.child(meet_id).child('timestamp').set(d_lda)
+    rtdb.child(meeting_id).child('timestamp').set(d_lda)

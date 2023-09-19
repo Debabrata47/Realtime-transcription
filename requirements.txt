@@ -7,13 +7,9 @@ nltk
 librosa
 uvicorn
 gunicorn
-<<<<<<< HEAD
 langchain
 openai
 tiktoken
 huggingface_hub
 openai
-=======
-langchain openai
->>>>>>> 8f38e78ad1f9af6ece172d5fcd4a03889f95f4c3
 firebase-admin
