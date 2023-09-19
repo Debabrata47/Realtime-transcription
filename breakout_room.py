@@ -1,7 +1,6 @@
 import os
 import json
-import firebase_admin
-from firebase_admin import credentials, db
+from firebase_db import rtdb
 from dotenv import load_dotenv
 from utils import structure_summary
 from langchain.chat_models import ChatOpenAI
@@ -20,10 +19,9 @@ import urllib
 import librosa
 import nemo.collections.asr as nemo_asr
 import numpy as np
+from utils_nemo import *
 import librosa
 
-from omegaconf import OmegaConf
-import shutil
 from scipy.io import wavfile
 from utils_nemo import load_align_model,align
 from nemo.collections.asr.parts.utils.decoder_timestamps_utils import ASRDecoderTimeStamps
@@ -36,32 +34,17 @@ import torch
 import torchaudio
 import nemo
 import glob
+import wget
 
 # Loads environment
 load_dotenv()
 
-llm = ChatOpenAI(temperature=0, mdoel='gpt-3.5-turbo-16k')
-
-
-firebaseConfig = {
-    'apiKey': "AIzaSyCGmeVM6OPnRbVGaW6O7DVqafArIGEm5Ys",
-    'authDomain': "silwalk-inc.firebaseapp.com",
-    'projectId': "silwalk-inc",
-    'databaseURL': "https://silwalk-inc-default-rtdb.firebaseio.com",
-    'storageBucket': "silwalk-inc.appspot.com",
-    'messagingSenderId': "665210785578",
-    'serviceAccount': "ServiceKey.json",
-    'appId': "1:665210785578:web:6279247f0704ec73be5853",
-    'measurementId': "G-EW5W77X7X7"
-}
-
-cred = credentials.Certificate("ServiceKey.json")
-firebase_admin.initialize_app(cred, firebaseConfig)
-
-rtdb = db.reference()
+llm = ChatOpenAI(temperature=0, model='gpt-3.5-turbo-16k')
 
 
 def evaluate_discussion(link: str, meeting_id: str, title: str):
+
+
     if not os.path.exists(f'meetings/{meeting_id}'):
         os.makedirs(f'meetings/{meeting_id}')
 
@@ -71,8 +54,6 @@ def evaluate_discussion(link: str, meeting_id: str, title: str):
     AUDIO_FILENAME = f'meetings/{meeting_id}/{title}/zoom_audio_16000.wav'
     os.makedirs(f'meetings/{meeting_id}/{title}/nemo')
     data_dir = f'meetings/{meeting_id}/{title}/nemo/'
-
-    urllib.request.urlretrieve(link,f'meetings/{meeting_id}/{title}/zoom_meeting.mp4')
 
     audioclip = AudioFileClip(f'meetings/{meeting_id}/{title}/zoom_meeting.mp4')
     audioclip.write_audiofile(f'meetings/{meeting_id}/{title}/zoom_audio.wav')
@@ -85,6 +66,7 @@ def evaluate_discussion(link: str, meeting_id: str, title: str):
 
     CONFIG_URL = f"https://raw.githubusercontent.com/NVIDIA/NeMo/main/examples/speaker_tasks/diarization/conf/inference/{CONFIG_FILE_NAME}"
 
+
     if not os.path.exists(os.path.join(data_dir, CONFIG_FILE_NAME)):
         CONFIG = wget.download(CONFIG_URL, data_dir)
     else:
@@ -94,8 +76,6 @@ def evaluate_discussion(link: str, meeting_id: str, title: str):
     print(OmegaConf.to_yaml(cfg))
 
     meta = {
-        'audio_filepath': AUDIO_FILENAME,
-        'offset': 0,
         'duration': None,
         'label': 'infer',
         'text': '-',
@@ -109,6 +89,7 @@ def evaluate_discussion(link: str, meeting_id: str, title: str):
 
     cfg.diarizer.manifest_filepath = os.path.join(data_dir, 'input_manifest.json')
     os.system(f'cat {cfg.diarizer.manifest_filepath}')
+
 
     pretrained_speaker_model = 'titanet_large'
     cfg.diarizer.manifest_filepath = cfg.diarizer.manifest_filepath

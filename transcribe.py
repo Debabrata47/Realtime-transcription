@@ -1,12 +1,11 @@
 import whisper
-import firebase_admin
-from firebase_admin import credentials, db
+from firebase_admin import db
 from threading import *
 import time
 import librosa
 import spacy
 from transformers import pipeline
-import json
+from Classroom_Summary.firebase_db import rtdb
 import os
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.decomposition import LatentDirichletAllocation
@@ -17,7 +16,6 @@ from langchain.chat_models import ChatOpenAI
 from langchain.prompts.chat import (
     ChatPromptTemplate,
     SystemMessagePromptTemplate,
-    AIMessagePromptTemplate,
     HumanMessagePromptTemplate,
 )
 
@@ -27,33 +25,19 @@ load_dotenv()
 model = whisper.load_model('small.en')
 SUMMARIZER = pipeline('summarization', model='facebook/bart-large-cnn')
 
-firebaseConfig = {
-    'apiKey': "AIzaSyCGmeVM6OPnRbVGaW6O7DVqafArIGEm5Ys",
-    'authDomain': "silwalk-inc.firebaseapp.com",
-    'projectId': "silwalk-inc",
-    'databaseURL': "https://silwalk-inc-default-rtdb.firebaseio.com",
-    'storageBucket': "silwalk-inc.appspot.com",
-    'messagingSenderId': "665210785578",
-    'serviceAccount': "ServiceKey.json",
-    'appId': "1:665210785578:web:6279247f0704ec73be5853",
-    'measurementId': "G-EW5W77X7X7"
-}
-
-cred = credentials.Certificate("ServiceKey.json")
-firebase_admin.initialize_app(cred, firebaseConfig)
-
 rtdb = db.reference()
 
 
 class video(Thread):
     def __init__(self, link, meeting_id):
         self.link = link
+        self.meeting_id = meeting_id
         Thread.__init__(self)
-        if not os.path.exists(f'meetings/{meeting_id}'):
-            os.makedirs(f'meetings/{meeting_id}')
+        if not os.path.exists(f'meetings/{self.meeting_id}'):
+            os.makedirs(f'meetings/{self.meeting_id}')
 
-    def run(self, meeting_id):
-        cmd = f'ffmpeg -y -i {self.link} -vn -c:a copy meetings/{meeting_id}/audiomain.wav'
+    def run(self):
+        cmd = f'ffmpeg -y -i {self.link} -vn -c:a copy meetings/{self.meeting_id}/audiomain.wav'
         os.system(cmd)
 
 
@@ -82,18 +66,12 @@ def transcribe_audio(hrl_link, meeting_id):
         ind = (count // 60) + 1
         trans[ind] = out
 
-        # file = open(f'meetings/{meeting_id}/transcript.json', 'w')
-        # json.dump(trans, file, ensure_ascii=False)
-        # file.close()
 
         rtdb.child(meeting_id).child('transcription').set(trans)
 
         if ind % 3 == 0:
             t3m = ''
 
-            # file = open(f'meetings/{meeting_id}/transcript.json', 'r')
-            # nas = json.load(file)
-            # file.close()
 
             for i in range(ind - 2, ind + 1):
                 t3m += (trans[str(i)] + ' ')
@@ -102,9 +80,6 @@ def transcribe_audio(hrl_link, meeting_id):
 
             summary[ind // 3] = s3m
 
-            # file = open(f'meetings/{meeting_id}/summary.json', 'w')
-            # json.dump(summary, file, ensure_ascii=False)
-            # file.close()
 
         rtdb.child(meeting_id).child('summary').set(summary)
 
