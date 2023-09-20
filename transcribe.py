@@ -1,6 +1,6 @@
 import whisper
 from firebase_admin import db
-from threading import *
+from threading import Thread
 import time
 import librosa
 import spacy
