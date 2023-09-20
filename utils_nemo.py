@@ -11,6 +11,8 @@ import nltk
 from nltk.tokenize.punkt import PunktSentenceTokenizer, PunktParameters
 
 
+SAMPLE_RATE = 16000
+
 class SingleWordSegment(TypedDict):
     """
     A single word of a speech.

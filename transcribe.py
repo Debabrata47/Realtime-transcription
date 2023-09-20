@@ -72,7 +72,7 @@ def transcribe_audio(hrl_link, meeting_id):
             t3m = ''
 
             for i in range(ind - 2, ind + 1):
-                t3m += (trans[str(i)] + ' ')
+                t3m += (trans[i] + ' ')
 
             s3m = SUMMARIZER(t3m, max_length=130, min_length=30, do_sample=False)[0]['summary_text']
 
@@ -142,14 +142,14 @@ def transcribe_audio(hrl_link, meeting_id):
 
     nltk.download('stopwords')
     stop = nltk.corpus.stopwords.words('english')
-
+    n_topics = 10
     lda_model = LatentDirichletAllocation(n_components=n_topics,
                                           learning_method='online', random_state=42, max_iter=1)
-    lda_top = lda_model.fit_transform(vect_text)
 
     vect = TfidfVectorizer(stop_words=stop, max_features=1000)
     vect_text = vect.fit_transform(textpp)
 
+    lda_top = lda_model.fit_transform(vect_text)
     rep_lda = [[] for i in range(lda_model.components_.shape[0])]
     vocab = vect.get_feature_names_out()
     for i, comp in enumerate(lda_model.components_):

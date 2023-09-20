@@ -26,4 +26,5 @@ numpy
 ffmpeg-python
 pandas
 Cython
-nemo_toolkit['all']
+nemo_toolkit
+hydra
