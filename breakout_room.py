@@ -144,7 +144,7 @@ def evaluate_discussion(link: str, meeting_id: str, title: str):
     transcriptsp = [i.split(' ', 3)[-1] for i in transcript]
 
     discussion = '\n'.join(transcriptsp)
-
+    print(discussion)
     llm = ChatOpenAI(temperature=0, model='gpt-3.5-turbo-16k')
 
     # Write a function to extract the diarization for the discussion.
@@ -182,6 +182,7 @@ def evaluate_discussion(link: str, meeting_id: str, title: str):
     text_splitter = RecursiveCharacterTextSplitter(chunk_size=1000, chunk_overlap=100)
     all_splits = text_splitter.split_documents([docs])
     output = map_reduce_chain.run(all_splits)
+    print(output)
     json_summaries = structure_summary(output)
     rtdb.child(meeting_id).child('breakout_room').child(title).child('summary').set(json_summaries)
     return json_summaries
