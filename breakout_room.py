@@ -10,9 +10,9 @@ from langchain.prompts import PromptTemplate
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 from langchain.chains import ReduceDocumentsChain, MapReduceDocumentsChain, StuffDocumentsChain
 
-BRANCH = 'r1.20.0'
+#BRANCH = 'r1.20.0'
 os.system('apt-get install sox libsndfile1 ffmpeg')
-os.system(f'python -m pip install git+https://github.com/NVIDIA/NeMo.git@${BRANCH}')
+#os.system(f'python -m pip install git+https://github.com/NVIDIA/NeMo.git@${BRANCH}')
 
 from moviepy.editor import *
 import wget
@@ -151,16 +151,32 @@ def evaluate_discussion(link: str, meeting_id: str, title: str):
 
     map_template = """
     The following is a set of documents
-    {docs} 
-    Based on the list of docs, please identify the main themes for each speaker. 
-    Helpful Answer:"""
+    {docs}
+    Based on the list of docs, please identify the main themes for each speaker using the following parameters below: 
+    PARAMETERS: Agreement of others on the point , Quality of views/thoughts, Change of viewpoint, thoughtfulness.
+    Helful Answer:
+    """
     map_prompt = PromptTemplate.from_template(map_template)
     map_chain = LLMChain(llm=llm, prompt=map_prompt)
-    reduce_template = """The following is set of summaries 
-    {doc_summaries} 
-    Generate a summary that analyses each speaker on the basis of how strong point he made. Did everyone agree. How much he spoke. Quality of views the speaker put forward. Did the speaker change his viewpoint on the basis of other speaker. Did he agree to other fair points.
-    Along with a overall key takeways summary separately. Along with that generate another summary that describes the quality of the discussion. Another to suggest what improvements could be made. 
-    Helpful Answer:"""
+    reduce_template = """The following is set of summaries:
+    {doc_summaries}
+    
+    Generate a total of 4 summaries in the following structure using the parameters mentioned for each type of summary: 
+    
+    Summary of Speaker Analysis: 
+    PARAMETERS - Agreement of everyone, how much he spoke, quality of thoughts, agreement of others to his viewpoints, listening to others thoughts, adding to others views/thoughts.
+    
+    Key Takeaways:
+    PARAMETERS - Overall gist of the discussion
+    
+    Summary of Discussion Quality:
+    PARAMETERS - Outcome of the discussion, Relevancy of speakers's views with each others, Conclusion, issues and points addressed, deviation from the topic. 
+    
+    Suggestions for Improvement
+    PARAMETERS - Room for improvement as a group, 
+    
+    Helful Answer:
+    """
     reduce_prompt = PromptTemplate.from_template(reduce_template)
     reduce_chain = LLMChain(llm=llm, prompt=reduce_prompt)
     combine_documents_chain = StuffDocumentsChain(llm_chain=reduce_chain, document_variable_name="doc_summaries")
