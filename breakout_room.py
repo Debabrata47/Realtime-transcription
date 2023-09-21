@@ -152,8 +152,8 @@ def evaluate_discussion(link: str, meeting_id: str, title: str):
     map_template = """
     The following is a set of documents
     {docs}
-    Based on the list of docs, please identify the main themes for each speaker using the following parameters below: 
-    PARAMETERS: Agreement of others on the point , Quality of views/thoughts, Change of viewpoint, thoughtfulness.
+    Generate a speaker wise summary for each speaker on the basis of below parameters:
+    PARAMETERS: Agreement with others on the point , Quality of views/thoughts, Change of viewpoint, thoughtfulness.
     Helful Answer:
     """
     map_prompt = PromptTemplate.from_template(map_template)
@@ -161,10 +161,10 @@ def evaluate_discussion(link: str, meeting_id: str, title: str):
     reduce_template = """The following is set of summaries:
     {doc_summaries}
     
-    Generate a total of 4 summaries in the following structure using the parameters mentioned for each type of summary: 
+    Generate the following 4 summaries in the given below structure using the parameters mentioned for each type of summary: 
     
     Summary of Speaker Analysis: 
-    PARAMETERS - Agreement of everyone, how much he spoke, quality of thoughts, agreement of others to his viewpoints, listening to others thoughts, adding to others views/thoughts.
+    PARAMETERS - Agreement of everyone, how much he spoke, quality of thoughts, agreement of others to his viewpoints, listening to others thoughts, adding to others views/thoughts
     
     Key Takeaways:
     PARAMETERS - Overall gist of the discussion
