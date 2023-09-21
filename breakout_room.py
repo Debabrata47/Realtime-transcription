@@ -145,6 +145,8 @@ def evaluate_discussion(link: str, meeting_id: str, title: str):
 
     discussion = '\n'.join(transcriptsp)
 
+    llm = ChatOpenAI(temperature=0, model='gpt-3.5-turbo-16k')
+
     # Write a function to extract the diarization for the discussion.
 
     map_template = """
