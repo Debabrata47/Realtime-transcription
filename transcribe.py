@@ -22,7 +22,7 @@ from langchain.prompts.chat import (
 # Loads openai environment
 load_dotenv()
 
-model = whisper.load_model('small.en')
+model = whisper.load_model('medium.en')
 SUMMARIZER = pipeline('summarization', model='facebook/bart-large-cnn')
 
 rtdb = db.reference()
