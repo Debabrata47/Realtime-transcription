@@ -1,4 +1,4 @@
-nemo_toolkit["all"]
+nemo_toolkit[all]
 torch
 torchvision
 torchaudio
