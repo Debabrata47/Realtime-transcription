@@ -2,6 +2,7 @@ nemo_toolkit[all]
 torch
 torchvision
 torchaudio
+Cython
 fastapi
 openai-whisper
 transformers
