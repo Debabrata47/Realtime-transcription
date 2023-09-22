@@ -27,5 +27,4 @@ numpy
 ffmpeg-python
 pandas
 Cython
-nemo_toolkit
 hydra
